@@ -167,6 +167,30 @@ Define leftmost (
     { 'value : value } | value )
 ```
 
+There is also a notation for doing the following:
+
+```
+([a : =? x] | "You gave me the current value of x.")
+```
+
+But it is easy to get carried away adding a lot of ugly syntax that doesn't gain the language much.
+
+Predicates. `[a : f]` as a parameter specification will match if `f a` is non-nil. Add two numbers only if they are both even, return `Nil` otherwise:
+
+```
+Define add-evens ( [a : Even?] [b : Even?] | a + b )
+```
+
+Fizzbuzz.
+```
+1 To 100 . (
+    [i : /Modulus 15 =? 0] | "fizzbuzz"
+    [i : /Modulus 5 =? 0] | "buzz"
+    [i : /Modulus 3 =? 0] | "fizz"
+    i | i ) . Display
+```
+
+### .
 `.` is the map/iteration operator. Print all the values in a table:
 ```
 table . ( i | Display i )
@@ -193,6 +217,20 @@ Print a message 100 times:
 )
 ```
 
+The dot operator applies the numbers 1, 2, 3, ... to the map on the left hand side and stops on the first nil it receives.
+
+```
+// grab elements 20 to 30 of a table
+20 to 30 . table
+
+// reverse the elements in a table
+Length table To 1 By -1 . table
+
+// another way of printing a message 100 times
+[<=? 100] . ( Display "hi" )
+```
+
+### Partial application
 Currying and partial application:
 ```
 ( a b | a + b ) 1 => add1
@@ -222,6 +260,8 @@ Define even? [/Modulus 2 =? 0] // partially applied at the front
 
 They can include emojis and everything else. The reason for this is to make it easier for non-English users to use variables that are normal for them. The only exception would be a wide rule banning all non-printing characters, to whatever degree that's possible in Unicode. Functions can use an underscore as an implicit parameter when they have no explicit parameters specified. Multiple implicit parameters are not supported, since they are hideous.
 
+### Bottom values
+
 I'm not sure I want an explicit `False` in the language. I'm leaning on no, since there is a lot of redundancy with `Nil`. Functions with no parameters can be called with any argument, but the standard would be `f []`, which is semantically equivalent to `f Nil`. The function `Unique` will create values that are not equal to anything else, even though object references could be used for that role. It depends on the precise value/reference semantics that are used. I'm partial to having value semantics throughout the language.
 
 Example operators:
@@ -239,22 +279,9 @@ Nil   // 2 >=? 3
 
 Notice that it is (_ 2 3) and not (2 _ 3). This is because the way that the operators are placed in the table causes them to be partially-applied on both the left and the right, so they become regular two-argument prefix functions. An expression such as `Nil =? Nil` will return `"True"`.
 
-Predicates. `[a : f]` as a parameter specification will match if `f a` is non-nil. Add two numbers only if they are both even, return `Nil` otherwise:
+### Mutability/immutability
 
-```
-Define add-evens ( [a : Even?] [b : Even?] | a + b )
-```
-
-Fizzbuzz.
-```
-1 To 100 . (
-    [i : /Modulus 15 =? 0] | "fizzbuzz"
-    [i : /Modulus 5 =? 0] | "buzz"
-    [i : /Modulus 3 =? 0] | "fizz"
-    i | i ) . Display
-```
-
-One part of my brain wants the functional operators to be lazy. On the other hand, I prefer the straightforwardness of computing everything as soon as possible. An advantage of immutable semantics is that this can be decided late, but immutability is not a goal for the language, maybe the default but not required.
+Immutability is not a goal for the language, it may be the default but not required.
 
 Memoized Fibonacci function. `Do f` just executes the function `f`. It doesn't do anything special but is the idiom for limiting scope.
 ```
@@ -271,19 +298,13 @@ Do (
 
 Elune is an expression language. The last expression is the return value, and assignment returns the assigned value. The first clause is an or clause `[1 | 2]` that matches either 1 or 2.
 
-There is also a notation for doing the following:
-
-```
-([a : =? x] | "You gave me the current value of x.")
-```
-
-But it is easy to get carried away adding a lot of ugly syntax that doesn't gain the language much.
-
 Anything can be a key or a value in a table.
 ```
 { Display : {"a"}, add : {1, 2} } => fs
 fs /KeyValues . ( { k, v } | k /Apply v )
 ```
+
+### Application polymorphism
 
 More examples on the polymorphism between arrays, functions, and maps:
 
@@ -304,18 +325,7 @@ f1 . Display
 f2 . Display
 ```
 
-The dot operator applies the numbers 1, 2, 3, ... to the map on the left hand side and stops on the first nil it receives.
-
-```
-// grab elements 20 to 30 of a table
-20 to 30 . table
-
-// reverse the elements in a table
-Length table To 1 By -1 . table
-
-// another way of printing a message 100 times
-[<=? 100] . ( Display "hi" )
-```
+This polymorphism isn't object-based. Some languages have `.call()` methods and so on. Elune doesn't have an object system baked into it. Instead of methods for built-in types, there is a small library of common functions such as `Length` available in the global namespace.
 
 ### Conditional operators
 
@@ -425,7 +435,8 @@ DefineOperator To (
 
 Words shadow variables. The unicode symbol `◇` is used rather than the ASCII `<>` in order for words to have some usage cost. In combination with the variadicity and partial applicability of functions, words raise many fun implementation challenges and might not be worth the effort. Their main downside is that they are easy to misuse and can lead to an outgrowth of domain-specific-language weeds, which causes development friction.
 
-Functional operations. The set of integers between 1 and 100 that are divisible by 5:
+### Functional operations
+The set of integers between 1 and 100 that are divisible by 5:
 ```
 1 To 100 /Keep [/Modulus 5 =? 0]
 ```
@@ -433,15 +444,6 @@ Functional operations. The set of integers between 1 and 100 that are divisible 
 The sum of the integers from 1 to 100.
 ```
 1 To 100 /Fold [+]
-```
-
-In Python:
-```
-S = [2*x for x in range(1, 101) if x**2 > 3]
-```
-In Elune:
-```
-1 To 100 /Keep [/Power 2 >? 3] . [* 2] => S
 ```
 
 I'm not sure how much I want APL/Numpy-like mathematical array operations to be a part of the language. Do we want `array * 5` to work like `array . [* 5]`? Note that `array*5` wouldn't work, because the `*` symbol has no special syntactic meaning in the language. It would represent a variable named `array*5`.
@@ -483,6 +485,7 @@ step1 >> step2 >> step3 value
 { step1, step2, step3 } /Fold With value By ( v f | f v )
 ```
 
+### String interpolation
 Square brackets inside strings are the interpolation syntax. One important thing that Elune does away with is escape sequences. The only escape-type characters are the square brackets. This means that strings are multiline. To enter a newline without creating a newline in the source code:
 
 ```
@@ -497,6 +500,7 @@ Display "These are square brackets: [LeftSquareBracket]Hi![RightSquareBracket]"
 
 Obnoxious, but beautiful in its clarity. Interpolating square brackets automatically inherit the String namespace.
 
+### First-class namespaces
 I considered giving the language first-class namespaces similar to Lua's which could be used to set an arbitrary map as the namespace for any given function, but I think the idea is not useful generally. The goal for the language is not for it to be an ultra-extensible language or anything like that. I actually prefer the Python philosophy of keeping things straightforward and the abstraction to a minimum.
 
 An example of a use case for first-class namespaces. An implementation of reap/sow:
@@ -537,6 +541,8 @@ Once the decision is made to use a visual module system, many interesting possib
 Here, `logic` in the source code would have a diagram data structure that can be interpreted by the module in whatever way it wants. This would enable the ability to move business logic out of the source code. Another use case would be specifying structures such as state machines. The modules are considered instances, so that you could have many instances of StateMachine modules on which you have different state machine diagrams.
 
 There's many different forms in which concepts of inheritence can be implemented in this model system, so it would probably be better to have a basic system in the first place before trying to figure that out. One idea is having mini version control for modules. When a module is duplicated, it will share a master repository with the original module, so that changes can be optionally pulled between related modules as necessary.
+
+The general idea for the visual module system is to move higher-level considerations such as architecture and business logic into a hopefully more manageable interface. One of the less obvious outcomes is that it would encourage looser coupling between components since modules would be written with the visual configurability in mind, which does not work well with minute details, and programmers cannot trust that terminals are what they advertise themselves to be since there is no restriction on what arrows can connect to a terminal.
 
 # Implementation
 I haven't worked on this language in a few years and probably won't be implementing it myself, since for me it was always more about the design rather than any implementation. But I thought it would be good to dust it off and let it have a little spot on the internet.
