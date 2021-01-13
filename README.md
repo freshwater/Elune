@@ -231,7 +231,7 @@ Length table To 1 By -1 . table
 ```
 
 ### Partial application
-Currying and partial application:
+
 ```
 ( a b | a + b ) 1 => add1
 ( a b | a + b ) 4 => add4
@@ -542,7 +542,9 @@ Here, `logic` in the source code would have a diagram data structure that can be
 
 There's many different forms in which concepts of inheritence can be implemented in this model system, so it would probably be better to have a basic system in the first place before trying to figure that out. One idea is having mini version control for modules. When a module is duplicated, it will share a master repository with the original module, so that changes can be optionally pulled between related modules as necessary.
 
-The general idea for the visual module system is to move higher-level considerations such as architecture and business logic into a hopefully more manageable interface. One of the less obvious outcomes is that it would encourage looser coupling between components since modules would be written with the visual configurability in mind, which does not work well with minute details, and programmers cannot trust that terminals are what they advertise themselves to be since there is no restriction on what arrows can connect to a terminal.
+The general idea for the visual module system is to move higher-level considerations such as architecture and business logic into an interface that is hopefully better suited to those tasks, as well as a general separation of concerns.
+
+One of the less obvious outcomes is that it would encourage looser coupling between components since modules would be written with the visual configurability in mind, which does not work well with minute details, and programmers cannot trust that terminals are what they advertise themselves to be since there is no restriction on what arrows can connect to a terminal.
 
 # Implementation
 I haven't worked on this language in a few years and probably won't be implementing it myself, since for me it was always more about the design rather than any implementation. But I thought it would be good to dust it off and let it have a little spot on the internet.
